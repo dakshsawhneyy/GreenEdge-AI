@@ -1,0 +1,14 @@
+{
+  "event_id": "7d6f0f4e-a68b-4d8b-a321-1fbc83e6b754",
+  "schema_version": "1.0",
+  "event_type": "sensor.telemetry",
+  "site_id": "building-demo-01",
+  "device_id": "simulator-hvac-01",
+  "observed_at": "2026-10-28T03:30:00Z",
+  "interval_seconds": 300,
+  "power_kw": 1.2,
+  "energy_kwh_delta": 0.1,
+  "temperature_c": 24.5,
+  "humidity_pct": 48.0,
+  "occupancy_count": 3
+}
