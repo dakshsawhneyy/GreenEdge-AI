@@ -28,3 +28,8 @@ terraform.tfvars
 # Local outputs
 dist/
 build/
+
+infra/environments/dev/certs/
+infra/modules/aws/lambda/*.zip
+
+commands.txt

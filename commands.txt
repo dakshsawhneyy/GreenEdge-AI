@@ -3,3 +3,26 @@ python3 edge/simulator/simulator.py --events 10 --interval 0 --output telemetry.
 
 # Unit Tests Command
 python -m unittest discover -s edge/simulator -p "test_*.py" -v
+
+---
+
+# Generate Private Key:
+openssl req -new -newkey rsa:2048 -nodes \
+  -keyout infra/environments/dev/certs/device-private.pem.key \
+  -out infra/environments/dev/certs/device.csr \
+  -subj "/CN=greenedge-sensor-01"
+
+
+# Save the public device certificate and retrieve the endpoint:
+terraform output -raw device_certificate_pem > certs/device-certificate.pem.crt
+terraform output -raw iot_endpoint
+
+
+python3 -m pip install awsiotsdk
+python3 edge/simulator/mqtt_publisher.py --events 5 --interval 2
+
+
+export AWS_IOT_ENDPOINT=a3s672h96i73y2-ats.iot.ap-south-1.amazonaws.com
+export AWS_IOT_CERT=/mnt/c/Studies/Multi-Cloud-Course/Capstone\ Projects/Project\ 2/infra/environments/dev/certs/device-certificate.pem.crt
+export AWS_IOT_KEY=/mnt/c/Studies/Multi-Cloud-Course/Capstone\ Projects/Project\ 2/infra/environments/dev/certs/device-private.pem.key
+export AWS_IOT_CA=/mnt/c/Studies/Multi-Cloud-Course/Capstone\ Projects/Project\ 2/infra/environments/dev/certs/AmazonRootCA1.pem
