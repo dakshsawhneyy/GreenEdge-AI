@@ -22,6 +22,8 @@ coverage/
 *.tfstate.*
 *.tfplan
 crash.log
+.terraform*
+terraform.tfvars
 
 # Local outputs
 dist/
