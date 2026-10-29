@@ -1,0 +1,4 @@
+aws_region            = "ap-south-1"
+gcp_project_id        = "replace-with-your-gcp-project-id"
+gcp_region            = "asia-south1"
+azure_subscription_id = "replace-with-your-azure-subscription-id"
