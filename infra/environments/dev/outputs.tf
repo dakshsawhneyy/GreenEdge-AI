@@ -1,14 +1,22 @@
-output "project_name" {
-  description = "GreenEdge AI project name"
-  value       = terraform_data.project_foundation.output.project
+output "iot_endpoint" {
+  value = module.aws_ingestion.iot_endpoint
 }
 
-output "environment" {
-  description = "Deployment environment"
-  value       = terraform_data.project_foundation.output.environment
+# ADD THIS:
+output "device_certificate_pem" {
+  value     = module.aws_ingestion.device_certificate_pem
+  sensitive = true
 }
 
-output "cloud_responsibilities" {
-  description = "Planned responsibility of each cloud"
-  value       = terraform_data.project_foundation.output.responsibilities
+# OPTIONALLY ADD THESE TOO (useful):
+output "thing_name" {
+  value = module.aws_ingestion.thing_name
+}
+
+output "lambda_function_name" {
+  value = module.aws_ingestion.lambda_function_name
+}
+
+output "telemetry_topic" {
+  value = module.aws_ingestion.telemetry_topic
 }

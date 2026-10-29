@@ -19,3 +19,9 @@ variable "azure_subscription_id" {
   description = "Azure subscription ID"
   type        = string
 }
+
+variable "device_csr_path" {
+  description = "Path to the locally generated device CSR"
+  type        = string
+  default     = "certs/device.csr"
+}
