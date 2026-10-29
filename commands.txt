@@ -1,0 +1,5 @@
+# Run Simulator
+python3 edge/simulator/simulator.py --events 10 --interval 0 --output telemetry.jsonl
+
+# Unit Tests Command
+python -m unittest discover -s edge/simulator -p "test_*.py" -v
