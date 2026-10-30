@@ -1,0 +1,20 @@
+# Deply frontend to azure static web application
+
+cd frontend
+npm install
+npm run build
+
+VITE_API_BASE_URL=https://api.example.com npm run build
+
+export SWA_NAME="YOUR-UNIQUE-STATIC-APP-NAME"
+export RESOURCE_GROUP="greenedge-ai-dev-rg"
+
+export SWA_DEPLOYMENT_TOKEN="$(az staticwebapp secrets list \
+  --name "$SWA_NAME" \
+  --resource-group "$RESOURCE_GROUP" \
+  --query "properties.apiKey" \
+  --output tsv)"
+
+npx @azure/static-web-apps-cli deploy ./frontend/dist \
+  --deployment-token "$SWA_DEPLOYMENT_TOKEN" \
+  -env production
