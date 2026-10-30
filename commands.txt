@@ -126,3 +126,13 @@ curl -X POST http://localhost:8000/ask \
 
 uvicorn backend.api.main:app --reload --port 8000
 
+##################################
+
+curl "http://localhost:8000/telemetry?site_id=building-01"
+
+
+npm create vite@latest frontend -- --template react
+
+cd frontend
+npm install
+npm install recharts lucide-react

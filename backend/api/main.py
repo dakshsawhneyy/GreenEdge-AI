@@ -9,6 +9,9 @@ from vertexai.language_models import (
     TextEmbeddingModel,
 )
 
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi import Query
+
 from google.cloud import bigquery
 from google.auth import default
 from google.auth.transport.requests import Request
@@ -69,6 +72,13 @@ app = FastAPI(
     version="1.0.0"
 )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type"],
+)
 
 # --------------------------------------------------
 # Request model
@@ -374,3 +384,55 @@ def ask(request: AskRequest):
             status_code=500,
             detail=f"Unable to process the sustainability question: {str(e)}"
         )
+        
+        
+@app.get("/telemetry")
+def get_telemetry(
+    site_id: str = Query(...),
+):
+    query = f"""
+        SELECT
+            FORMAT_TIMESTAMP(
+                '%Y-%m-%dT%H:%M:%SZ',
+                timestamp
+            ) AS timestamp,
+            power_kw,
+            occupancy
+        FROM `{PROJECT_ID}.{DATASET}.{TELEMETRY_TABLE}`
+        WHERE site_id = @site_id
+          AND timestamp >= TIMESTAMP_SUB(
+              CURRENT_TIMESTAMP(),
+              INTERVAL 24 HOUR
+          )
+        ORDER BY timestamp ASC
+        LIMIT 500
+    """
+
+    job_config = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter(
+                "site_id", "STRING", site_id
+            )
+        ]
+    )
+
+    rows = bq_client.query(
+        query,
+        job_config=job_config
+    ).result()
+
+    readings = [
+        {
+            "timestamp": row["timestamp"],
+            "power_kw": row["power_kw"],
+            "occupancy": row["occupancy"],
+        }
+        for row in rows
+    ]
+
+    return {
+        "site_id": site_id,
+        "period": "last 24 hours",
+        "reading_count": len(readings),
+        "readings": readings,
+    }
