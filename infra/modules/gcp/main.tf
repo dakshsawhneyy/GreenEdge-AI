@@ -10,6 +10,12 @@ resource "google_project_service" "bigquery" {
   disable_on_destroy = false
 }
 
+resource "google_project_service" "aiplatform" {
+  project            = var.project_id
+  service            = "aiplatform.googleapis.com"
+  disable_on_destroy = false
+}
+
 resource "google_pubsub_topic" "telemetry" {
   name    = "greenedge-${var.environment}-telemetry"
   project = var.project_id
@@ -85,6 +91,46 @@ resource "google_bigquery_table" "telemetry" {
       mode = "NULLABLE"
     }
   ])
+}
+
+resource "google_bigquery_table" "knowledge_chunks" {
+  project    = var.project_id
+  dataset_id = google_bigquery_dataset.telemetry.dataset_id
+  table_id   = "knowledge_chunks"
+
+  deletion_protection = true
+
+  schema = jsonencode([
+    {
+      name = "chunk_id"
+      type = "STRING"
+      mode = "REQUIRED"
+    },
+    {
+      name = "source"
+      type = "STRING"
+      mode = "REQUIRED"
+    },
+    {
+      name = "content"
+      type = "STRING"
+      mode = "REQUIRED"
+    },
+    {
+      name = "embedding"
+      type = "FLOAT64"
+      mode = "REPEATED"
+    },
+    {
+      name = "created_at"
+      type = "TIMESTAMP"
+      mode = "REQUIRED"
+    }
+  ])
+
+  depends_on = [
+    google_project_service.aiplatform
+  ]
 }
 
 resource "google_pubsub_subscription" "bigquery" {

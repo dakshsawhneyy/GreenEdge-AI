@@ -27,3 +27,7 @@ output "lambda_publisher_service_account" {
 output "gcp_project_number" {
   value = data.google_project.current.number
 }
+
+output "knowledge_table" {
+  value = google_bigquery_table.knowledge_chunks.table_id
+}
