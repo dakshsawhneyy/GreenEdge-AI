@@ -25,3 +25,8 @@ variable "device_csr_path" {
   type        = string
   default     = "certs/device.csr"
 }
+
+variable "aws_account_id" {
+  type = string
+}
+
