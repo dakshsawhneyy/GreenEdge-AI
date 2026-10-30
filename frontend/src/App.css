@@ -1,0 +1,182 @@
+.dashboard {
+  max-width: 1200px;
+  margin: auto;
+  padding: 30px 24px;
+}
+
+.topbar,
+.intro,
+.section-heading,
+.chat-heading,
+.metric-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.topbar h1 {
+  margin: 0;
+  color: #14784b;
+}
+
+.topbar p,
+.intro p,
+.chart-card p,
+.chat-heading p {
+  color: #758078;
+  margin-top: 6px;
+}
+
+.site-badge {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  background: #e2f3e9;
+  color: #14784b;
+  padding: 10px 14px;
+  border-radius: 20px;
+}
+
+.intro {
+  margin: 35px 0 20px;
+}
+
+.refresh-button,
+.chat-form button {
+  border: none;
+  border-radius: 8px;
+  padding: 11px 16px;
+  background: #14784b;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.refresh-button:disabled,
+.chat-form button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.metric-card,
+.chart-card,
+.chat-card {
+  background: white;
+  border: 1px solid #e5ebe7;
+  border-radius: 12px;
+  padding: 22px;
+  margin-bottom: 20px;
+}
+
+.metric-card h2 {
+  font-size: 28px;
+  margin-bottom: 0;
+}
+
+.metric-card small {
+  font-size: 13px;
+  color: #758078;
+}
+
+.metric-heading {
+  color: #647168;
+}
+
+.chart-card {
+  margin-top: 20px;
+}
+
+.chart-card h2,
+.chat-card h2 {
+  margin-top: 0;
+}
+
+.chat-card {
+  margin-top: 28px;
+}
+
+.chat-heading {
+  justify-content: flex-start;
+  gap: 12px;
+}
+
+.chat-form {
+  display: flex;
+  gap: 10px;
+  margin: 20px 0;
+}
+
+.chat-form input {
+  flex: 1;
+  min-width: 0;
+  padding: 13px;
+  border: 1px solid #d8e1da;
+  border-radius: 8px;
+}
+
+.answer-panel {
+  background: #f7faf8;
+  border: 1px solid #e2eae4;
+  border-radius: 10px;
+  padding: 18px;
+  overflow-wrap: anywhere;
+}
+
+.answer-text {
+  white-space: pre-wrap;
+  line-height: 1.7;
+}
+
+.answer-panel pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  background: #edf2ee;
+  padding: 12px;
+  border-radius: 8px;
+}
+
+.error {
+  color: #bd3030;
+}
+
+.warning {
+  color: #946200;
+}
+
+footer {
+  text-align: center;
+  color: #758078;
+  padding: 25px 0;
+}
+
+@media (max-width: 800px) {
+  .metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 520px) {
+  .dashboard {
+    padding: 18px 12px;
+  }
+
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .chat-form {
+    flex-direction: column;
+  }
+
+  .topbar {
+    align-items: flex-start;
+    gap: 12px;
+  }
+}
