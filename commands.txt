@@ -83,7 +83,7 @@ cp aws-wif-config.json ../../modules/aws/lambda/aws-wif-config.json
 ############################################### Phase 6
 
 export GCP_PROJECT_ID="YOUR_GCP_PROJECT_ID"
-export GCP_REGION="asia-south1"
+export GCP_REGION="us-central1"
 export BQ_DATASET="greenedge_dev"
 export BQ_TABLE="knowledge_chunks"
 
@@ -96,3 +96,33 @@ SELECT
   ARRAY_LENGTH(embedding) AS embedding_dimensions
 FROM `daksh-512910.greenedge_dev.knowledge_chunks`
 LIMIT 10;
+
+
+
+#######################################
+export GCP_PROJECT_ID="YOUR_GCP_PROJECT_ID"
+export GCP_REGION="us-central1"
+
+export BQ_DATASET="greenedge_dev"
+export TELEMETRY_TABLE="sensor_telemetry"
+export KNOWLEDGE_TABLE="knowledge_chunks"
+
+export GEMINI_MODEL="gemini-1.5-flash"
+
+
+
+curl -X POST http://localhost:8000/ask \
+  -H "Content-Type: application/json" \
+  -d '{
+    "question": "Why might energy consumption remain high when the building is unoccupied?",
+    "site_id": "building-01"
+  }'
+
+curl -X POST http://localhost:8000/ask \
+  -H "Content-Type: application/json" \
+  -d '{"question": "How can I reduce HVAC energy costs?", "site_id": "building-01"}'
+
+
+
+uvicorn backend.api.main:app --reload --port 8000
+
