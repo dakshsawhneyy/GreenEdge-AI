@@ -27,10 +27,10 @@ module "aws_ingestion" {
   gcp_project_id = var.gcp_project_id
   gcp_topic_id   = "greenedge-dev-telemetry"
 
-  gcp_project_number              = module.gcp_pipeline.gcp_project_number
-  workload_identity_pool_id       = "greenedge-aws-pool"
-  workload_identity_provider_id   = "greenedge-aws-provider"
-  lambda_publisher_sa_email       = module.gcp_pipeline.lambda_publisher_service_account
+  gcp_project_number            = module.gcp_pipeline.gcp_project_number
+  workload_identity_pool_id     = "greenedge-aws-pool"
+  workload_identity_provider_id = "greenedge-aws-provider"
+  lambda_publisher_sa_email     = module.gcp_pipeline.lambda_publisher_service_account
 }
 
 module "gcp_pipeline" {

@@ -59,7 +59,16 @@ FROM \`${GCP_PROJECT_ID}.greenedge_dev.sensor_telemetry\`
 ORDER BY timestamp DESC
 LIMIT 10"
 
-
+# BigQuery query
+SELECT
+  event_id,
+  device_id,
+  site_id,
+  timestamp,
+  power_kw,
+  occupancy
+FROM `daksh-512910.greenedge_dev.sensor_telemetry`
+ORDER BY timestamp DESC
 
 # newly created gcp federation resources
 gcloud iam workload-identity-pools create-cred-config \
@@ -69,3 +78,21 @@ gcloud iam workload-identity-pools create-cred-config \
   --output-file=aws-wif-config.json
 
 cp aws-wif-config.json ../../modules/aws/lambda/aws-wif-config.json
+
+
+############################################### Phase 6
+
+export GCP_PROJECT_ID="YOUR_GCP_PROJECT_ID"
+export GCP_REGION="asia-south1"
+export BQ_DATASET="greenedge_dev"
+export BQ_TABLE="knowledge_chunks"
+
+
+# bigQuery Query
+SELECT
+  chunk_id,
+  source,
+  content,
+  ARRAY_LENGTH(embedding) AS embedding_dimensions
+FROM `daksh-512910.greenedge_dev.knowledge_chunks`
+LIMIT 10;
