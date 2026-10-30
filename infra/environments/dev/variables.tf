@@ -30,3 +30,12 @@ variable "aws_account_id" {
   type = string
 }
 
+variable "project_name" {
+  type    = string
+  default = "greenedge-ai"
+}
+
+variable "static_web_app_name" {
+  description = "Globally unique name for the Static Web App"
+  type        = string
+}

@@ -42,3 +42,12 @@ module "gcp_pipeline" {
   aws_account_id       = var.aws_account_id
   aws_lambda_role_name = module.aws_ingestion.lambda_role_name
 }
+
+
+# Azure Integration
+module "azure_frontend" {
+  source              = "../../modules/azure"
+  project_name        = var.project_name
+  environment         = "dev"
+  static_web_app_name = var.static_web_app_name
+}
