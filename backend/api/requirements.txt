@@ -1,0 +1,7 @@
+fastapi
+uvicorn[standard]
+google-cloud-bigquery
+google-cloud-aiplatform
+google-generativeai
+requests
+google-generativeai
