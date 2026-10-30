@@ -1,57 +1,126 @@
 import json
 import logging
-from datetime import datetime
+import os
+from datetime import datetime, timezone
+
+import google.auth
+from google.cloud import pubsub_v1
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
+PROJECT_ID = os.environ["GCP_PROJECT_ID"]
+TOPIC_ID = os.environ["GCP_PUBSUB_TOPIC"]
 
-def lambda_handler(event, context):
-    required = {
-        "event_id", "device_id", "site_id", "timestamp",
-        "temperature_c", "humidity_pct", "power_kw", "occupancy"
-    }
+# ADC reads aws-wif-config.json.
+# The Google authentication library exchanges the Lambda's
+# temporary AWS credentials for short-lived Google credentials.
+credentials, _ = google.auth.default(
+    scopes=["https://www.googleapis.com/auth/pubsub"]
+)
 
-    if not isinstance(event, dict) or not required.issubset(event):
-        raise ValueError("Telemetry missing required fields")
+publisher = pubsub_v1.PublisherClient(
+    credentials=credentials
+)
 
-    for field in ("event_id", "device_id", "site_id"):
-        if not isinstance(event[field], str) or not event[field].strip():
-            raise ValueError(f"Invalid {field}")
+topic_path = publisher.topic_path(
+    PROJECT_ID,
+    TOPIC_ID
+)
 
-    try:
-        timestamp = event["timestamp"]
-        parsed = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
-        if parsed.utcoffset() is None or not timestamp.endswith("Z"):
-            raise ValueError("Timestamp must be UTC")
-    except (ValueError, AttributeError, TypeError):
-        raise ValueError("Invalid UTC timestamp")
 
-    for field in ("temperature_c", "humidity_pct", "power_kw"):
+def validate_event(event):
+    required = [
+        "event_id",
+        "device_id",
+        "site_id",
+        "timestamp",
+        "temperature_c",
+        "humidity_pct",
+        "power_kw",
+        "occupancy",
+    ]
+
+    for field in required:
+        if field not in event:
+            raise ValueError(f"Missing field: {field}")
+
+    if not isinstance(event["event_id"], str) or not event["event_id"]:
+        raise ValueError("Invalid event_id")
+
+    if not isinstance(event["device_id"], str) or not event["device_id"]:
+        raise ValueError("Invalid device_id")
+
+    if not isinstance(event["site_id"], str) or not event["site_id"]:
+        raise ValueError("Invalid site_id")
+
+    timestamp = datetime.fromisoformat(
+        event["timestamp"].replace("Z", "+00:00")
+    )
+
+    if timestamp.tzinfo is None:
+        raise ValueError("Timestamp must include timezone")
+
+    if timestamp.utcoffset() != timezone.utc.utcoffset(timestamp):
+        raise ValueError("Timestamp must be UTC")
+
+    for field in [
+        "temperature_c",
+        "humidity_pct",
+        "power_kw",
+    ]:
         value = event[field]
-        if isinstance(value, bool) or not isinstance(value, (int, float)):
-            raise ValueError(f"Invalid {field}")
 
-    if not -50 <= event["temperature_c"] <= 100:
-        raise ValueError("Temperature out of range")
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            raise ValueError(f"Invalid numeric field: {field}")
+
     if not 0 <= event["humidity_pct"] <= 100:
-        raise ValueError("Humidity out of range")
+        raise ValueError("Invalid humidity")
+
     if event["power_kw"] < 0:
         raise ValueError("Power cannot be negative")
 
-    occupancy = event["occupancy"]
-    if isinstance(occupancy, bool) or not isinstance(occupancy, int):
+    if isinstance(event["occupancy"], bool) or not isinstance(
+        event["occupancy"], int
+    ):
         raise ValueError("Occupancy must be an integer")
-    if occupancy < 0:
+
+    if event["occupancy"] < 0:
         raise ValueError("Occupancy cannot be negative")
 
-    logger.info(json.dumps({
-        "message": "Telemetry accepted",
-        "event_id": event["event_id"],
-        "device_id": event["device_id"],
-        "site_id": event["site_id"],
-        "power_kw": event["power_kw"],
-        "occupancy": occupancy,
-    }))
 
-    return {"statusCode": 200, "body": "Telemetry accepted"}
+def lambda_handler(event, context):
+    try:
+        validate_event(event)
+
+        payload = json.dumps(event).encode("utf-8")
+
+        future = publisher.publish(
+            topic_path,
+            payload,
+            event_id=event["event_id"],
+            device_id=event["device_id"],
+            site_id=event["site_id"],
+        )
+
+        message_id = future.result(timeout=15)
+
+        logger.info(
+            json.dumps({
+                "status": "published",
+                "event_id": event["event_id"],
+                "pubsub_message_id": message_id,
+                "topic": TOPIC_ID,
+            })
+        )
+
+        return {
+            "statusCode": 200,
+            "message": "Telemetry published to Pub/Sub",
+            "event_id": event["event_id"],
+            "pubsub_message_id": message_id,
+        }
+
+    except Exception:
+        logger.exception("Telemetry publishing failed")
+        raise

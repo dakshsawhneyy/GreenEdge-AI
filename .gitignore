@@ -33,3 +33,6 @@ infra/environments/dev/certs/
 infra/modules/aws/lambda/*.zip
 
 commands.txt
+
+aws-wif-config.json
+lambda

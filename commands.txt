@@ -26,3 +26,46 @@ export AWS_IOT_ENDPOINT=a3s672h96i73y2-ats.iot.ap-south-1.amazonaws.com
 export AWS_IOT_CERT=/mnt/c/Studies/Multi-Cloud-Course/Capstone\ Projects/Project\ 2/infra/environments/dev/certs/device-certificate.pem.crt
 export AWS_IOT_KEY=/mnt/c/Studies/Multi-Cloud-Course/Capstone\ Projects/Project\ 2/infra/environments/dev/certs/device-private.pem.key
 export AWS_IOT_CA=/mnt/c/Studies/Multi-Cloud-Course/Capstone\ Projects/Project\ 2/infra/environments/dev/certs/AmazonRootCA1.pem
+
+#######################################
+
+export GCP_PROJECT_ID="YOUR_GCP_PROJECT_ID"
+export PUBSUB_TOPIC="greenedge-dev-telemetry"
+
+# Publish an event
+gcloud pubsub topics publish "$PUBSUB_TOPIC" \
+  --project="$GCP_PROJECT_ID" \
+  --message='{
+    "event_id": "evt-phase5-test-001",
+    "device_id": "building-01-sensor-01",
+    "site_id": "building-01",
+    "timestamp": "2026-10-30T08:00:00Z",
+    "temperature_c": 25.4,
+    "humidity_pct": 48.2,
+    "power_kw": 3.6,
+    "occupancy": 12
+  }'
+
+# Query the table
+bq query --use_legacy_sql=false \
+"SELECT
+  event_id,
+  device_id,
+  site_id,
+  timestamp,
+  power_kw,
+  occupancy
+FROM \`${GCP_PROJECT_ID}.greenedge_dev.sensor_telemetry\`
+ORDER BY timestamp DESC
+LIMIT 10"
+
+
+
+# newly created gcp federation resources
+gcloud iam workload-identity-pools create-cred-config \
+  "$(terraform output -raw workload_identity_provider_name)" \
+  --service-account="$(terraform output -raw lambda_publisher_service_account)" \
+  --aws \
+  --output-file=aws-wif-config.json
+
+cp aws-wif-config.json ../../modules/aws/lambda/aws-wif-config.json

@@ -2,10 +2,27 @@ data "aws_caller_identity" "current" {}
 
 data "aws_region" "current" {}
 
-data "archive_file" "lambda_package" {
+data "archive_file" "lambda" {
   type        = "zip"
-  source_file = "${path.module}/lambda/handler.py"
-  output_path = "${path.module}/lambda/handler.zip"
+  source_dir  = "${path.module}/lambda"
+  output_path = "${path.module}/lambda.zip"
+}
+
+# Generate WIF configuration file for Lambda
+resource "local_file" "wif_config" {
+  filename = "${path.module}/lambda/aws-wif-config.json"
+
+  content = jsonencode({
+    type                           = "external_account"
+    audience                       = "//iam.googleapis.com/projects/${var.gcp_project_number}/locations/global/workloadIdentityPools/${var.workload_identity_pool_id}/providers/${var.workload_identity_provider_id}"
+    subject_token_type             = "urn:ietf:params:aws:token-type:aws4_request"
+    token_url                      = "https://sts.googleapis.com/v1/token"
+    service_account_impersonation_url = "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/${var.lambda_publisher_sa_email}:generateAccessToken"
+    credential_source = {
+      environment_id               = "aws1"
+      regional_cred_verification_url = "https://sts.{region}.amazonaws.com?Action=GetCallerIdentity&Version=2011-06-15"
+    }
+  })
 }
 
 data "aws_iot_endpoint" "data" {
@@ -57,9 +74,9 @@ resource "aws_iam_role" "lambda" {
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
-      Effect = "Allow"
+      Effect    = "Allow"
       Principal = { Service = "lambda.amazonaws.com" }
-      Action = "sts:AssumeRole"
+      Action    = "sts:AssumeRole"
     }]
   })
 }
@@ -79,10 +96,18 @@ resource "aws_lambda_function" "telemetry" {
   role             = aws_iam_role.lambda.arn
   handler          = "handler.lambda_handler"
   runtime          = "python3.12"
-  filename         = data.archive_file.lambda_package.output_path
-  source_code_hash = data.archive_file.lambda_package.output_base64sha256
+  filename         = data.archive_file.lambda.output_path
+  source_code_hash = data.archive_file.lambda.output_base64sha256
   timeout          = 10
   memory_size      = 128
+
+  environment {
+    variables = {
+      GOOGLE_APPLICATION_CREDENTIALS = "/var/task/aws-wif-config.json"
+      GCP_PROJECT_ID                 = var.gcp_project_id
+      GCP_PUBSUB_TOPIC               = var.gcp_topic_id
+    }
+  }
 
   depends_on = [
     aws_iam_role_policy_attachment.lambda_logs,
