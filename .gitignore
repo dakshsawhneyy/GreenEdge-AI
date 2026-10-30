@@ -36,3 +36,5 @@ commands.txt
 
 aws-wif-config.json
 lambda
+
+dist
