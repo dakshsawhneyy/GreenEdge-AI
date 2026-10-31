@@ -48,3 +48,9 @@ variable "billing_account_id" {
 variable "project_number" {
   type = string
 }
+
+variable "frontend_origin" {
+  description = "Production Azure Static Web Apps origin for CORS (e.g., https://your-app.azurestaticapps.net)"
+  type        = string
+  default     = ""
+}
