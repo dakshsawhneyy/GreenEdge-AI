@@ -110,12 +110,18 @@ async def request_logging(request: Request, call_next):
         )
         raise
 
+# Configure CORS for frontend access
+frontend_origins = [
+    "http://localhost:5173",  # Local development
+    os.getenv("FRONTEND_ORIGIN", ""),  # Production Azure Static Web App
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
-    allow_credentials=True,
-    allow_methods=["GET", "POST"],
-    allow_headers=["Content-Type"],
+    allow_origins=[origin for origin in frontend_origins if origin],
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization"],
 )
 
 
