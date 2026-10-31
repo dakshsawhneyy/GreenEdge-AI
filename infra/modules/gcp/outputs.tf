@@ -31,3 +31,15 @@ output "gcp_project_number" {
 output "knowledge_table" {
   value = google_bigquery_table.knowledge_chunks.table_id
 }
+
+output "cloud_run_url" {
+  value = google_cloud_run_v2_service.api.uri
+}
+
+output "github_wif_provider" {
+  value = google_iam_workload_identity_pool_provider.github.name
+}
+
+output "github_deployer_email" {
+  value = google_service_account.github_deployer.email
+}

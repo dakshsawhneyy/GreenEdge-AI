@@ -54,3 +54,11 @@ output "workload_identity_pool_name" {
 output "gcp_project_number" {
   value = module.gcp_pipeline.gcp_project_number
 }
+
+output "github_wif_provider" {
+  value = module.gcp_pipeline.github_wif_provider
+}
+
+output "github_deployer_email" {
+  value = module.gcp_pipeline.github_deployer_email
+}

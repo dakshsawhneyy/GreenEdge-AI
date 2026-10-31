@@ -28,3 +28,18 @@ variable "billing_account_id" {
 variable "project_number" {
   type = string
 }
+
+variable "github_repository" {
+  description = "GitHub repository in OWNER/REPO format"
+  type        = string
+}
+
+variable "github_deployment_service_account_id" {
+  type    = string
+  default = "greenedge-github-deployer"
+}
+
+variable "bigquery_dataset_id" {
+  type = string
+  default = "greenedge_dev"
+}

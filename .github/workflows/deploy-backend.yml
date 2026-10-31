@@ -61,11 +61,25 @@ jobs:
 
       - name: Verify deployment
         run: |
+          echo "Waiting for service to stabilize..."
+          sleep 30
+          
           URL=$(gcloud run services describe "$SERVICE" \
             --region "${{ vars.GCP_REGION }}" \
             --project "${{ vars.GCP_PROJECT_ID }}" \
             --format="value(status.url)")
 
           echo "Cloud Run URL: $URL"
-
-          curl --fail --retry 5 --retry-delay 5 "$URL/health"
+          
+          echo "Performing health check..."
+          curl --fail \
+            --max-time 30 \
+            --connect-timeout 10 \
+            --retry 10 \
+            --retry-delay 5 \
+            --retry-max-time 300 \
+            --verbose \
+            "$URL/health"
+          
+          echo ""
+          echo "✅ Deployment verified successfully!"

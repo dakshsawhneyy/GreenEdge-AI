@@ -43,6 +43,7 @@ module "gcp_pipeline" {
   aws_lambda_role_name = module.aws_ingestion.lambda_role_name
   billing_account_id = var.billing_account_id
   project_number = var.project_number
+  github_repository = "dakshsawhneyy/GreenEdge-AI"
 }
 
 
