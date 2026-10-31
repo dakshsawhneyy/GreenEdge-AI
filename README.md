@@ -9,7 +9,7 @@ The goal is simple: move beyond dashboards that only show energy consumption and
 
 ## Dashboard Preview
 
-![GreenEdge AI Dashboard](docs/images/dashboard.png)
+![GreenEdge AI Dashboard](docs/images/ai-assistant.png)
 
 ## Architecture
 
