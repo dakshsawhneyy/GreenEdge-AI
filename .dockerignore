@@ -1,0 +1,12 @@
+.git
+.github
+.venv
+**/__pycache__
+**/*.pyc
+**/.env
+**/terraform.tfstate*
+**/credentials*.json
+**/*-private.pem*
+**/aws-wif-config.json
+frontend/node_modules
+frontend/dist

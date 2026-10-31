@@ -1,26 +1,27 @@
 
+import logging
 import os
-from datetime import datetime, timezone
-import json
+import time
+import uuid
 
 import vertexai
+from fastapi import FastAPI, HTTPException, Query, Request
+from fastapi.middleware.cors import CORSMiddleware
+from google.auth import default
+from google.auth.transport.requests import Request
+from google.cloud import bigquery
+from pydantic import BaseModel, Field
 from vertexai.language_models import (
     TextEmbeddingInput,
     TextEmbeddingModel,
 )
 
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi import Query
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s %(message)s",
+)
 
-from google.cloud import bigquery
-from google.auth import default
-from google.auth.transport.requests import Request
-import google.generativeai as genai
-
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel, Field
-import requests
-
+logger = logging.getLogger("greenedge-api")
 
 # --------------------------------------------------
 # Configuration
@@ -71,6 +72,41 @@ app = FastAPI(
     description="Sustainability Operations Copilot",
     version="1.0.0"
 )
+
+@app.middleware("http")
+async def request_logging(request: Request, call_next):
+    request_id = str(uuid.uuid4())
+    start_time = time.perf_counter()
+
+    try:
+        response = await call_next(request)
+
+        duration_ms = round(
+            (time.perf_counter() - start_time) * 1000,
+            2,
+        )
+
+        response.headers["X-Request-ID"] = request_id
+
+        logger.info(
+            "request_id=%s method=%s path=%s status=%s duration_ms=%s",
+            request_id,
+            request.method,
+            request.url.path,
+            response.status_code,
+            duration_ms,
+        )
+
+        return response
+
+    except Exception:
+        logger.exception(
+            "request_id=%s method=%s path=%s unhandled_error",
+            request_id,
+            request.method,
+            request.url.path,
+        )
+        raise
 
 app.add_middleware(
     CORSMiddleware,
@@ -378,11 +414,11 @@ def ask(request: AskRequest):
     except Exception as e:
         # Log the detailed exception
         import traceback
-        print(f"ERROR: {str(e)}")
+        print(f"ERROR: {e!s}")
         print(traceback.format_exc())
         raise HTTPException(
             status_code=500,
-            detail=f"Unable to process the sustainability question: {str(e)}"
+            detail=f"Unable to process the sustainability question: {e!s}"
         )
         
         
