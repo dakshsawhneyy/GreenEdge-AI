@@ -373,6 +373,11 @@ resource "google_cloud_run_v2_service" "api" {
         name  = "GEMINI_MODEL"
         value = "gemini-2.5-flash"
       }
+
+      env {
+        name  = "FRONTEND_ORIGIN"
+        value = var.frontend_origin
+      }
     }
   }
 
@@ -382,6 +387,16 @@ resource "google_cloud_run_v2_service" "api" {
     google_project_iam_member.cloud_run_vertex,
     google_project_service.run
   ]
+}
+
+# Allow public access to the Cloud Run service
+resource "google_cloud_run_v2_service_iam_member" "public_invoker" {
+  project  = var.project_id
+  location = var.region
+  name     = google_cloud_run_v2_service.api.name
+
+  role   = "roles/run.invoker"
+  member = "allUsers"
 }
 
 

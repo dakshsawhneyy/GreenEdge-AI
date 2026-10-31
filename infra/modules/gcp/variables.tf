@@ -43,3 +43,9 @@ variable "bigquery_dataset_id" {
   type = string
   default = "greenedge_dev"
 }
+
+variable "frontend_origin" {
+  type        = string
+  description = "Production Azure Static Web Apps origin for CORS"
+  default     = ""
+}
