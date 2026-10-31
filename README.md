@@ -1,129 +1,136 @@
 # GreenEdge AI
-### A Multi-Cloud Sustainability Operations Copilot
+### Making energy data useful, not just visible.
 
-GreenEdge AI is a multi-cloud platform that combines IoT telemetry, cloud analytics, and generative AI to help investigate energy consumption and identify sustainability improvements.
+Most energy dashboards can tell you how much power a building is consuming. That's useful, but it doesn't necessarily tell an engineer what to investigate next.
 
-It collects operational data from simulated edge devices, processes it through AWS, analyzes it in Google Cloud, and uses Vertex AI to generate recommendations grounded in actual telemetry and sustainability knowledge.
+GreenEdge AI explores a different approach.
 
-The goal is simple: move beyond dashboards that only show energy consumption and build a system that helps explain what might be happening and what engineers should investigate.
+It's a multi-cloud sustainability operations platform that takes sensor telemetry, makes it available for analysis, retrieves relevant sustainability knowledge, and uses an AI assistant to help investigate operational inefficiencies.
 
-## Dashboard Preview
+The interesting part isn't just the AI. It's the infrastructure and data pipeline that make the answers possible.
+
+---
+
+## The system, at a glance
 
 ![GreenEdge AI Dashboard](docs/images/dashboard.png)
 
-*Replace with an authentic screenshot of the running application.*
+*The application dashboard — replace with a screenshot of the actual running application.*
 
-## Architecture
+Three cloud providers, each doing a specific job:
 
-GreenEdge AI uses three cloud providers, each responsible for a distinct part of the platform.
+- **AWS** handles device connectivity and incoming telemetry.
+- **Google Cloud** handles data ingestion, analytical storage, retrieval and AI.
+- **Azure** hosts the user-facing application.
+
+The infrastructure is managed with Terraform rather than being assembled manually through cloud consoles.
+
+## Following a sensor event
+
+A simulated sensor reading travels through the platform before it becomes useful to the AI assistant.
 
 ```mermaid
-flowchart TD
-    A["Python Edge Simulator"] -->|"MQTT / TLS"| B["AWS IoT Core"]
-    B --> C["AWS Lambda"]
-    C -->|"Workload Identity Federation"| D["Google Cloud Pub/Sub"]
+flowchart LR
+    A["Python Simulator"] -->|"MQTT / TLS"| B["AWS IoT Core"]
+    B --> C["Lambda"]
+    C -->|"Workload Identity Federation"| D["Pub/Sub"]
     D --> E["BigQuery"]
 
-    E --> F["FastAPI Backend"]
-    G["Sustainability Knowledge Base"] --> H["BigQuery Vector Search"]
+    E --> F["FastAPI"]
+    G["Sustainability Documents"] --> H["Embeddings + Vector Search"]
     H --> F
-    F --> I["Vertex AI Gemini"]
-
+    F --> I["Vertex AI / Gemini"]
     I --> F
-    F -->|"HTTPS REST API"| J["React Dashboard"]
-    J --> K["Azure Static Web Apps"]
+    F -->|"REST API"| J["React Frontend"]
 ```
 
-| Cloud | Responsibility | Services |
-|---|---|---|
-| AWS | IoT ingestion and event processing | IoT Core, Lambda, IAM, CloudWatch |
-| Google Cloud | Data engineering and AI | Pub/Sub, BigQuery, Vertex AI, Cloud Run, Artifact Registry |
-| Azure | Frontend hosting | Static Web Apps |
+**The journey:**
 
-## How It Works
+1. A Python edge simulator generates building telemetry: power, temperature, humidity and occupancy.
+2. AWS IoT Core receives the events over MQTT/TLS. An IoT Rule invokes Lambda for processing.
+3. Lambda publishes the validated event to Google Cloud Pub/Sub using Workload Identity Federation.
+4. Pub/Sub delivers the data to BigQuery, where it can be queried for operational analysis.
+5. The FastAPI backend retrieves relevant telemetry and sustainability knowledge.
+6. Gemini uses that evidence to formulate an answer, which is returned to the React application.
 
-**1. Edge telemetry**
+This separation is deliberate. Telemetry is queried as structured data; sustainability documents are retrieved semantically. The model gets both forms of evidence rather than being asked to guess from a prompt alone.
 
-A Python simulator generates building sensor readings, including temperature, humidity, occupancy, and power consumption. Events are validated and published using MQTT over TLS.
+## Where the engineering gets interesting
 
-**2. AWS ingestion**
+### Cross-cloud identity without service account keys
 
-AWS IoT Core authenticates the device and receives telemetry. An IoT Rule invokes Lambda, which validates and forwards events to Google Cloud.
+One of the important decisions in this project was avoiding long-lived GCP service account credentials in AWS Lambda and GitHub Actions.
 
-**3. Cross-cloud data pipeline**
+The platform uses Workload Identity Federation to establish trust between external workloads and Google Cloud.
 
-Lambda authenticates to Google Cloud through Workload Identity Federation and publishes messages to Pub/Sub. BigQuery stores the incoming telemetry for analytical queries.
+There are two separate identity flows:
 
-**4. Sustainability knowledge and RAG**
+- AWS Lambda to Google Cloud for telemetry publishing.
+- GitHub Actions to Google Cloud for backend deployment.
 
-Sustainability documents covering HVAC, lighting, and energy management are chunked, embedded using Vertex AI, and stored in BigQuery. Vector search retrieves relevant knowledge for each user question.
+Each has its own identity configuration and permissions. This keeps infrastructure provisioning, application deployment and runtime data ingestion from sharing one set of credentials.
 
-**5. AI assistant**
+### A knowledge base that works alongside live telemetry
 
-A FastAPI backend combines structured telemetry with retrieved knowledge and passes the evidence to Gemini. The assistant generates recommendations while distinguishing observed measurements from possible explanations.
+The assistant has two sources of context.
 
-**6. Frontend**
+**Operational evidence:** readings stored in BigQuery, queried for a particular site and time window.
 
-A React dashboard communicates with the backend through HTTPS APIs, displaying operational metrics, charts, AI responses, and supporting evidence.
+**Domain knowledge:** sustainability documents covering HVAC efficiency, lighting and energy management. Documents are chunked, embedded using Vertex AI and stored in BigQuery for vector retrieval.
 
-## AI Assistant
+The backend combines the retrieved information before calling Gemini.
 
-![GreenEdge AI Assistant](docs/images/ai-assistant.png)
+![AI Assistant](docs/images/ai-assistant.png)
 
-The assistant is designed to answer questions using operational evidence rather than relying on generic LLM responses.
+*Replace with an actual question and response from the application.*
 
-Example questions:
+An important design constraint: an AI-generated explanation is not the same as a measured result. The assistant should distinguish observations from hypotheses, identify missing evidence and avoid inventing energy savings or emissions reductions.
 
-- Why might energy consumption remain high during unoccupied hours?
-- How can HVAC energy consumption be reduced?
-- What patterns can be observed in power consumption?
-- Which sustainability practices are relevant to the current operating conditions?
+### Infrastructure is part of the application
 
-The backend retrieves telemetry from BigQuery and relevant knowledge chunks through vector search before invoking Gemini.
+Terraform manages the cloud resources across the three providers through separate modules and a development environment.
 
-It also aims to identify insufficient evidence instead of inventing measurements, energy savings, or causal explanations.
+The application is containerized and deployed to Cloud Run. Docker images are stored in Artifact Registry. The React frontend is built and hosted on Azure Static Web Apps.
 
-## Engineering and Infrastructure
+GitHub Actions handles CI and deployment workflows. The pipelines use commit-specific image tags and federated cloud authentication rather than static GCP service account keys.
 
-The project goes beyond application development. Infrastructure, identity, deployment, security, and operational visibility are part of the design.
+Observability and cost controls are also considered: application request metrics, CloudWatch, Cloud Monitoring, billing budgets, BigQuery query limits and resource labels.
 
-| Area | Implementation |
+## A few implementation details
+
+| Component | Technology |
 |---|---|
-| Infrastructure as Code | Terraform modules for AWS, GCP and Azure |
-| CI | GitHub Actions, automated tests and linting |
-| Containerization | Docker |
-| Image security | Trivy vulnerability scanning |
-| Backend deployment | Cloud Run |
-| Frontend deployment | Azure Static Web Apps |
-| Cloud identity | AWS IAM and Google Workload Identity Federation |
-| Application metrics | Prometheus-compatible instrumentation |
-| Cloud monitoring | AWS CloudWatch and Google Cloud Monitoring |
-| Cost management | Billing budgets, resource labels and BigQuery query controls |
+| Edge simulator | Python |
+| Device ingestion | AWS IoT Core, MQTT |
+| Event processing | AWS Lambda |
+| Cross-cloud messaging | Google Cloud Pub/Sub |
+| Analytical storage | BigQuery |
+| Semantic retrieval | Vertex AI embeddings, BigQuery vector search |
+| AI generation | Gemini |
+| Backend | Python, FastAPI |
+| Frontend | React, Vite |
+| Backend hosting | Cloud Run |
+| Frontend hosting | Azure Static Web Apps |
+| Infrastructure | Terraform |
+| Automation | GitHub Actions |
+| Monitoring | Prometheus instrumentation, CloudWatch, Cloud Monitoring |
 
-GitHub Actions builds commit-specific Docker images, pushes them to Artifact Registry, and deploys the backend to Cloud Run. The frontend is built with its production API URL and deployed to Azure Static Web Apps.
-
-Long-lived cloud service account keys are avoided in automated GCP authentication.
-
-## Technology Stack
-
-`Python` `FastAPI` `React` `Vite` `Docker` `Terraform` `GitHub Actions` `AWS IoT Core` `AWS Lambda` `Google Pub/Sub` `BigQuery` `Vertex AI` `Gemini` `Cloud Run` `Azure Static Web Apps`
-
-## Project Structure
+## Repository layout
 
 ```text
-GreenEdge-AI/
+.
 ├── edge/
-│   └── simulator/
+│   └── simulator/          # Generates and validates sensor events
 ├── backend/
-│   ├── api/
-│   ├── rag/
-│   └── telemetry/
-├── frontend/
+│   ├── api/                # FastAPI endpoints and AI orchestration
+│   ├── rag/                # Retrieval functionality
+│   └── telemetry/          # Telemetry processing
+├── frontend/               # React dashboard and assistant
 ├── analytics/
-│   ├── schemas/
-│   └── queries/
+│   ├── schemas/            # Telemetry data contracts
+│   └── queries/            # Analytical SQL
 ├── knowledge-base/
-│   └── sustainability/
+│   └── sustainability/     # Source documents for RAG
 ├── infra/
 │   ├── environments/
 │   └── modules/
@@ -132,31 +139,49 @@ GreenEdge-AI/
 │       └── azure/
 ├── tests/
 ├── docs/
-│   └── images/
 └── .github/
     └── workflows/
 ```
 
-## Screenshots
+## Running it locally
 
-Add genuine screenshots from the running implementation.
+The simulator and application can be developed independently of the cloud deployment.
 
-| Component | Screenshot |
-|---|---|
-| AWS IoT ingestion | `docs/images/aws-iot.png` |
-| BigQuery telemetry | `docs/images/bigquery.png` |
-| RAG knowledge retrieval | `docs/images/rag.png` |
-| Terraform infrastructure | `docs/images/terraform.png` |
-| GitHub Actions CI/CD | `docs/images/ci-cd.png` |
-| Cloud Run deployment | `docs/images/cloud-run.png` |
-| Observability dashboard | `docs/images/monitoring.png` |
+**Start the backend:**
 
-## Scope and Future Work
+```bash
+uvicorn backend.api.main:app --reload --port 8000
+```
 
-GreenEdge AI currently uses simulated sensor data and an initial sustainability knowledge base. Its recommendations are advisory, not autonomous building-control commands.
+**Start the frontend:**
 
-Future improvements include physical IoT integration, anomaly detection, energy forecasting, retrieval evaluation, authenticated users, and more advanced reliability and cost controls.
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Configure the frontend's `VITE_API_URL` to point to the backend. The backend also requires the appropriate Google Cloud project, region and application credentials for its BigQuery and Vertex AI integrations.
+
+See the infrastructure environment and application configuration for the deployment-specific settings.
+
+## What this project demonstrates
+
+GreenEdge AI brings together several engineering concerns that are often treated as separate projects:
+
+- Designing an event-driven pipeline across cloud providers.
+- Establishing federated identity between independently managed environments.
+- Separating analytical queries from semantic retrieval.
+- Building an AI workflow that uses retrieved evidence.
+- Managing infrastructure through reusable Terraform modules.
+- Automating container builds and deployments.
+- Considering observability, security and cloud spending alongside application functionality.
+
+The current implementation uses simulated building telemetry and an initial sustainability knowledge base. It is an engineering prototype, not a certified energy-management system. AI recommendations are advisory and do not directly control physical equipment.
 
 ---
 
-**GreenEdge AI — From operational telemetry to informed sustainability decisions.**
+**GreenEdge AI**
+
+*From a sensor reading to an investigation worth having.*
+
