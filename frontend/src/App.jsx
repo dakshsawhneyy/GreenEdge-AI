@@ -22,6 +22,17 @@ import "./App.css";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
+const response = await fetch(`${API_URL}/ask`, {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    question,
+    site_id: "building-01"
+  })
+});
+
 function MetricCard({ title, value, unit, icon: Icon }) {
   return (
     <div className="metric-card">
