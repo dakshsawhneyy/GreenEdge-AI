@@ -14,6 +14,7 @@ The goal is simple: move beyond dashboards that only show energy consumption and
 ## Architecture
 
 GreenEdge AI uses three cloud providers, each responsible for a distinct part of the platform.
+![GreenEdge Architecture](docs/images/architecture.png)
 
 ```mermaid
 flowchart TB
