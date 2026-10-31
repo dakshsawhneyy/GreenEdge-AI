@@ -65,6 +65,7 @@ jobs:
             --set-env-vars "TELEMETRY_TABLE=sensor_telemetry" \
             --set-env-vars "KNOWLEDGE_TABLE=knowledge_chunks" \
             --set-env-vars "GEMINI_MODEL=gemini-1.5-flash-002" \
+            --set-env-vars "FRONTEND_ORIGIN=${{ vars.FRONTEND_ORIGIN }}" \
             --min-instances 0 \
             --max-instances 10 \
             --memory 512Mi \
