@@ -38,6 +38,14 @@ function MetricCard({ title, value, unit, icon: Icon }) {
 function App() {
   const API_URL = import.meta.env.VITE_API_URL;
   
+  // Log API URL for debugging
+  useEffect(() => {
+    console.log('API_URL configured as:', API_URL);
+    if (!API_URL) {
+      console.error('VITE_API_URL environment variable is not set!');
+    }
+  }, [API_URL]);
+  
   const [telemetry, setTelemetry] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
