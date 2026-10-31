@@ -227,3 +227,65 @@ resource "google_pubsub_topic_iam_member" "lambda_publisher" {
   role    = "roles/pubsub.publisher"
   member  = "serviceAccount:${google_service_account.lambda_publisher.email}"
 }
+
+resource "google_billing_budget" "greenedge_dev" {
+  billing_account = var.billing_account_id
+  display_name    = "GreenEdge AI Development Budget"
+
+  budget_filter {
+    projects = [
+      "projects/${var.project_number}"
+    ]
+  }
+
+  amount {
+    specified_amount {
+      currency_code = "INR"
+      units         = "500"
+    }
+  }
+
+  threshold_rules {
+    threshold_percent = 0.50
+  }
+
+  threshold_rules {
+    threshold_percent = 0.80
+  }
+
+  threshold_rules {
+    threshold_percent = 1.00
+  }
+}
+
+# resource "google_monitoring_alert_policy" "cloud_run_errors" {
+#   project      = var.project_id
+#   display_name = "GreenEdge - Cloud Run 5xx errors"
+#   combiner     = "OR"
+
+#   conditions {
+#     display_name = "High Cloud Run 5xx response count"
+
+#     condition_threshold {
+#       filter = <<-EOT
+#         resource.type = "cloud_run_revision"
+#         AND resource.labels.service_name = "${var.cloud_run_service_name}"
+#         AND metric.type = "run.googleapis.com/request_count"
+#         AND metric.label.response_code_class = "5xx"
+#       EOT
+
+#       comparison      = "COMPARISON_GT"
+#       threshold_value = 5
+#       duration        = "300s"
+
+#       aggregations {
+#         alignment_period   = "300s"
+#         per_series_aligner = "ALIGN_SUM"
+#       }
+#     }
+#   }
+
+#   alert_strategy {
+#     auto_close = "1800s"
+#   }
+# }
