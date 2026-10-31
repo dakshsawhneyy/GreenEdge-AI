@@ -17,4 +17,4 @@ export SWA_DEPLOYMENT_TOKEN="$(az staticwebapp secrets list \
 
 npx @azure/static-web-apps-cli deploy ./frontend/dist \
   --deployment-token "$SWA_DEPLOYMENT_TOKEN" \
-  -env production
+  --env production

@@ -1,13 +1,12 @@
 import argparse
 import json
 import os
+import random
 import time
 
-from awsiot import mqtt_connection_builder
 from awscrt import mqtt
-
+from awsiot import mqtt_connection_builder
 from simulator import generate_event, validate_event
-import random
 
 
 def main():

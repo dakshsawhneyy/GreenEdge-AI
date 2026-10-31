@@ -6,11 +6,6 @@ import uuid
 
 import vertexai
 from fastapi import FastAPI, HTTPException, Query, Request, Response
-from backend.api.metrics import (
-    REQUEST_COUNT,
-    REQUEST_LATENCY,
-    metrics_response
-)
 from fastapi.middleware.cors import CORSMiddleware
 from google.auth import default
 from google.auth.transport.requests import Request
@@ -20,6 +15,8 @@ from vertexai.language_models import (
     TextEmbeddingInput,
     TextEmbeddingModel,
 )
+
+from backend.api.metrics import REQUEST_COUNT, REQUEST_LATENCY, metrics_response
 
 logging.basicConfig(
     level=logging.INFO,
@@ -123,11 +120,6 @@ app.add_middleware(
 
 
 # Prometheus Middleware
-from backend.api.metrics import (
-    REQUEST_COUNT,
-    REQUEST_LATENCY,
-    metrics_response
-)
 
 @app.middleware("http")
 async def prometheus_metrics(request, call_next):

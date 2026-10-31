@@ -136,3 +136,12 @@ npm create vite@latest frontend -- --template react
 cd frontend
 npm install
 npm install recharts lucide-react
+
+########################################
+
+python3 -m unittest discover \
+  -s edge/simulator \
+  -p "test_*.py" -v
+
+ruff check backend/api edge/simulator
+ruff check backend/api edge/simulator --fix

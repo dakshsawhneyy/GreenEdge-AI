@@ -4,13 +4,13 @@ import random
 import sys
 import time
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 
 def utc_timestamp():
     """Return an ISO 8601 UTC timestamp."""
     return (
-        datetime.now(timezone.utc)
+        datetime.now(UTC)
         .isoformat(timespec="milliseconds")
         .replace("+00:00", "Z")
     )

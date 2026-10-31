@@ -1,7 +1,7 @@
+import random
 import unittest
 
 from simulator import generate_event, validate_event
-import random
 
 
 class SimulatorTests(unittest.TestCase):
