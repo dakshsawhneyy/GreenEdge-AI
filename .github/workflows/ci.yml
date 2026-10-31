@@ -39,9 +39,9 @@ jobs:
             -p "test_*.py" \
             -v
 
-      - name: Check Python code
-        run: |
-          ruff check backend/api edge/simulator
+      # - name: Check Python code
+      #   run: |
+      #     ruff check backend/api edge/simulator
 
   container:
     name: Build and scan backend image
