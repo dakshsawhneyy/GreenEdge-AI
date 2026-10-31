@@ -1,0 +1,68 @@
+name: GreenEdge CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Test and validate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install backend dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/api/requirements.txt
+          pip install pytest ruff
+
+      - name: Run simulator unit tests
+        run: |
+          python -m unittest discover \
+            -s edge/simulator \
+            -p "test_*.py" \
+            -v
+
+      - name: Check Python code
+        run: |
+          ruff check backend/api edge/simulator
+
+  container:
+    name: Build and scan backend image
+    needs: validate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            -f backend/api/Dockerfile \
+            -t greenedge-api:${GITHUB_SHA} \
+            .
+
+      - name: Scan image with Trivy
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: greenedge-api:${{ github.sha }}
+          format: table
+          exit-code: "1"
+          ignore-unfixed: true
+          vuln-type: os,library
+          severity: HIGH,CRITICAL
