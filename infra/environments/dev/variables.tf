@@ -39,3 +39,12 @@ variable "static_web_app_name" {
   description = "Globally unique name for the Static Web App"
   type        = string
 }
+
+variable "billing_account_id" {
+  type      = string
+  sensitive = true
+}
+
+variable "project_number" {
+  type = string
+}
