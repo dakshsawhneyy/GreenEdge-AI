@@ -123,9 +123,6 @@ app.add_middleware(
 
 
 # Prometheus Middleware
-import time
-
-from fastapi import Response
 from backend.api.metrics import (
     REQUEST_COUNT,
     REQUEST_LATENCY,
