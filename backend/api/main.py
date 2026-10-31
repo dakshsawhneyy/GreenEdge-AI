@@ -29,6 +29,7 @@ logger = logging.getLogger("greenedge-api")
 # Configuration
 # --------------------------------------------------
 
+# Backend accepts requests from configured frontend origin
 PROJECT_ID = os.environ["GCP_PROJECT_ID"]
 REGION = os.getenv("GCP_REGION", "us-central1")
 
