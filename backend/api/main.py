@@ -5,7 +5,12 @@ import time
 import uuid
 
 import vertexai
-from fastapi import FastAPI, HTTPException, Query, Request
+from fastapi import FastAPI, HTTPException, Query, Request, Response
+from backend.api.metrics import (
+    REQUEST_COUNT,
+    REQUEST_LATENCY,
+    metrics_response
+)
 from fastapi.middleware.cors import CORSMiddleware
 from google.auth import default
 from google.auth.transport.requests import Request
@@ -115,6 +120,46 @@ app.add_middleware(
     allow_methods=["GET", "POST"],
     allow_headers=["Content-Type"],
 )
+
+
+# Prometheus Middleware
+import time
+
+from fastapi import Response
+from backend.api.metrics import (
+    REQUEST_COUNT,
+    REQUEST_LATENCY,
+    metrics_response
+)
+
+@app.middleware("http")
+async def prometheus_metrics(request, call_next):
+    start = time.perf_counter()
+
+    response = await call_next(request)
+
+    duration = time.perf_counter() - start
+
+    REQUEST_COUNT.labels(
+        method=request.method,
+        endpoint=request.url.path,
+        status=response.status_code
+    ).inc()
+
+    REQUEST_LATENCY.observe(duration)
+
+    return response
+
+
+@app.get("/metrics")
+def prometheus_endpoint():
+    content, content_type = metrics_response()
+
+    return Response(
+        content=content,
+        media_type=content_type
+    )
+
 
 # --------------------------------------------------
 # Request model
