@@ -11,13 +11,11 @@ The goal is simple: move beyond dashboards that only show energy consumption and
 
 ![GreenEdge AI Dashboard](docs/images/dashboard.png)
 
-*Replace with an authentic screenshot of the running application.*
-
 ## Architecture
 
 GreenEdge AI uses three cloud providers, each responsible for a distinct part of the platform.
 
-
+```mermaid
 flowchart TB
     subgraph EDGE["EDGE ENVIRONMENT"]
         direction LR
@@ -64,10 +62,7 @@ flowchart TB
     end
 
     subgraph AZURE["03 / AZURE — APPLICATION DELIVERY"]
-        direction LR
-        SWA["Azure Static<br/>Web Apps"]
-        UI["React Dashboard"]
-        SWA --- UI
+        UI["React Dashboard<br/>Azure Static Web Apps"]
     end
 
     MQTT --> IOT
@@ -82,8 +77,8 @@ flowchart TB
     class SIM,MQTT edge
     class IOT,RULE,LAMBDA aws
     class PUB,BQ,DOCS,EMBED,VECTOR,API,GEMINI gcp
-    class SWA,UI azure
-
+    class UI azure
+```
 
 | Cloud | Responsibility | Services |
 |---|---|---|
@@ -190,7 +185,7 @@ GreenEdge-AI/
 
 ## Screenshots
 
-Add genuine screenshots from the running implementation.
+The following screenshots can be added as the corresponding implementation components are verified.
 
 | Component | Screenshot |
 |---|---|
