@@ -17,22 +17,73 @@ The goal is simple: move beyond dashboards that only show energy consumption and
 
 GreenEdge AI uses three cloud providers, each responsible for a distinct part of the platform.
 
-```mermaid
-flowchart TD
-    A["Python Edge Simulator"] -->|"MQTT / TLS"| B["AWS IoT Core"]
-    B --> C["AWS Lambda"]
-    C -->|"Workload Identity Federation"| D["Google Cloud Pub/Sub"]
-    D --> E["BigQuery"]
 
-    E --> F["FastAPI Backend"]
-    G["Sustainability Knowledge Base"] --> H["BigQuery Vector Search"]
-    H --> F
-    F --> I["Vertex AI Gemini"]
+flowchart TB
+    subgraph EDGE["EDGE ENVIRONMENT"]
+        direction LR
+        SIM["Python Sensor Simulator"]
+        MQTT["MQTT over TLS"]
+        SIM --> MQTT
+    end
 
-    I --> F
-    F -->|"HTTPS REST API"| J["React Dashboard"]
-    J --> K["Azure Static Web Apps"]
-```
+    subgraph AWS["01 / AWS — DEVICE INGESTION"]
+        direction LR
+        IOT["AWS IoT Core"]
+        RULE["IoT Rule"]
+        LAMBDA["Telemetry Lambda"]
+        IOT --> RULE --> LAMBDA
+    end
+
+    subgraph GCP["02 / GOOGLE CLOUD — DATA & INTELLIGENCE"]
+        direction TB
+
+        subgraph INGEST["TELEMETRY PIPELINE"]
+            direction LR
+            PUB["Pub/Sub"]
+            BQ["BigQuery<br/>Sensor Telemetry"]
+            PUB --> BQ
+        end
+
+        subgraph KNOWLEDGE["KNOWLEDGE PIPELINE"]
+            direction LR
+            DOCS["Sustainability<br/>Documents"]
+            EMBED["Vertex AI<br/>Embeddings"]
+            VECTOR["BigQuery<br/>Vector Search"]
+            DOCS --> EMBED --> VECTOR
+        end
+
+        subgraph AI["APPLICATION & AI"]
+            direction LR
+            API["FastAPI<br/>Cloud Run"]
+            GEMINI["Vertex AI<br/>Gemini"]
+            API <--> GEMINI
+        end
+
+        BQ --> API
+        VECTOR --> API
+    end
+
+    subgraph AZURE["03 / AZURE — APPLICATION DELIVERY"]
+        direction LR
+        SWA["Azure Static<br/>Web Apps"]
+        UI["React Dashboard"]
+        SWA --- UI
+    end
+
+    MQTT --> IOT
+    LAMBDA -->|"WIF · Pub/Sub publish"| PUB
+    UI <-->|"HTTPS / REST"| API
+
+    classDef edge fill:#243447,stroke:#7895ad,color:#ffffff
+    classDef aws fill:#49351f,stroke:#d99b45,color:#ffffff
+    classDef gcp fill:#1d3c35,stroke:#64b99a,color:#ffffff
+    classDef azure fill:#253b55,stroke:#70a9e8,color:#ffffff
+
+    class SIM,MQTT edge
+    class IOT,RULE,LAMBDA aws
+    class PUB,BQ,DOCS,EMBED,VECTOR,API,GEMINI gcp
+    class SWA,UI azure
+
 
 | Cloud | Responsibility | Services |
 |---|---|---|
