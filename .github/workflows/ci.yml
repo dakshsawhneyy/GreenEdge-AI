@@ -39,6 +39,11 @@ jobs:
             -p "test_*.py" \
             -v
 
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2.23.0
+        with:
+          egress-policy: audit
+
       # - name: Check Python code
       #   run: |
       #     ruff check backend/api edge/simulator
